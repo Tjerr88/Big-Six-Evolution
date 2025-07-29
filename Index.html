@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>B6E Program</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #111827; color: #f9fafb; font-size: 1.1rem; }
+    .test-session { background-color: #374151; border: 3px solid #f59e0b; }
+    .regular-session { background-color: #1f2937; border: 2px solid #4b5563; }
+    button { transition: background 0.2s; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-2">
+  <div id="root" class="w-full max-w-md"></div>
+
+  <script type="text/babel">
+
+// ------------------ DATA ---------------------
+
+const patterns = {
+  "Swing Pattern": ["One-Legged Deadlift", "Double Sumo Deadlift", "Single Leg Glute Bridge",
+    "One-arm Swing", "(Side Stepping) Two-arm Swing", "Double Swing"],
+  "Get Up Pattern": ["(3 Min) Get Up", "Supine to Sit Up", "Windmill",
+    "Bent Press", "Supine to Half Kneel", "Half Kneel to Stand"],
+  "Clean Pattern": ["HS-Plank", "Front Rack Carry", "Single Dead Clean",
+    "Double Clean", "Pull Up/Chin Up", "One-arm Row"],
+  "Squat Pattern": ["B-stance Goblet Squat", "Single Front Squat", "Paused Front Squat",
+    "Double Front Squat", "Athletic Lunge", "Bottom Up Squat"],
+  "Press Pattern": ["Military Press", "Top Down Press", "Half Kneeling Press",
+    "Floor Press", "Double Push Press", "Double Push Jerk"],
+  "Snatch Pattern": ["Overhead Carry", "Snatch", "Low Pull Snatch",
+    "High Pull", "Front/Side Raise Snatch", "Double Snatch"],
+  "Hybrid Pattern": ["Double Clean & Press", "Double Clean & Front Squat", "Double Snatch & Overhead Walk",
+    "Double Clean & Jerk", "Double Snatch & Press", "Double Front Squat & Push Press"]
+};
+
+const cycleVolumes = {
+  1: { low: 10, medium: 20, high: 30 },
+  2: { low: 15, medium: 25, high: 40 },
+  3: { low: 20, medium: 30, high: 50 }
+};
+
+const swingLadderExercises = ["One-arm Swing", "(Side Stepping) Two-arm Swing", "Snatch", "High Pull"];
+const evenLadderExercises = ["Double Push Press", "Double Push Jerk", "Double Clean", "Double Swing", "Double Snatch", "Double Front Squat"];
+const timeBasedExercises = ["Overhead Carry", "Front Rack Carry", "HS-Plank"];
+const hybridExercises = ["Double Clean & Press", "Double Clean & Front Squat", "Double Snatch & Overhead Walk",
+  "Double Clean & Jerk", "Double Snatch & Press", "Double Front Squat & Push Press"];
+
+// ------------------ FUNCTIES ---------------------
+
+const randomChoice = arr => arr[Math.floor(Math.random() * arr.length)];
+
+function calculateVolume(exercise, volumeType, cycle) {
+  const base = cycleVolumes[cycle][volumeType];
+
+  if (exercise === "(3 Min) Get Up") {
+    if (volumeType === "low") return cycle;
+    if (volumeType === "medium") return cycle + 1;
+    if (volumeType === "high") return cycle + 2;
+  }
+
+  if (hybridExercises.includes(exercise)) return cycleVolumes[cycle]["low"];
+
+  if (timeBasedExercises.includes(exercise)) {
+    const timeMap = {
+      1: { low: 30, medium: 60, high: 90 },
+      2: { low: 45, medium: 75, high: 105 },
+      3: { low: 60, medium: 90, high: 120 }
+    };
+    return timeMap[cycle][volumeType];
+  }
+
+  return base;
+}
+
+function getLadderPattern(exercise, volume, cycle) {
+  if (timeBasedExercises.includes(exercise)) return [`${volume} sec`, volume];
+
+  if (hybridExercises.includes(exercise)) {
+    if (cycle === 1) return ["1-2-3-4", 10];
+    if (cycle === 2) return ["1-2-3-4-5", 15];
+    if (cycle === 3) return ["2x 1-2-3-4", 20];
+  }
+
+  if (swingLadderExercises.includes(exercise)) {
+    const map = {
+      1: {10:"10",20:"5-15",30:"5-10-15"},
+      2: {15:"5-10",25:"10-15",40:"5-15-20"},
+      3: {20:"5-15",30:"10-20",50:"10-15-25"}
+    };
+    return [map[cycle][volume] || `${volume}`, volume];
+  }
+
+  if (evenLadderExercises.includes(exercise)) {
+    const map = {
+      1: {10:"4-6",20:"2-4-6-8",30:"2-4-6-8-10"},
+      2: {15:"2-4-6 + 1-2",25:"2x 2-4-6 + 1",40:"2-4-6-8-10 + 2-4-6"},
+      3: {20:"2-4-6-8",30:"2-4-6-8-10",50:"2x 2-4-6-8 + 2-4"}
+    };
+    return [map[cycle][volume] || `${volume}`, volume];
+  }
+
+  const map = {
+    1: {10:"1-2-3-4",20:"2x 1-2-3-4",30:"3x 1-2-3-4"},
+    2: {15:"1-2-3-4-5",25:"1-2-3-4-5 + 1-2-3-4",40:"2x 1-2-3-4-5 + 1-2-3-4"},
+    3: {20:"2x 1-2-3-4",30:"2x 1-2-3-4-5",50:"3x 1-2-3-4-5 + 1-2"}
+  };
+  return [map[cycle][volume] || `${volume} reps`, volume];
+}
+
+function getVolumeFormat(exercise, volume, cycle) {
+  const [pattern, total] = getLadderPattern(exercise, volume, cycle);
+  if (timeBasedExercises.includes(exercise)) return pattern;
+  return `${total} reps (${pattern})`;
+}
+
+function generateProgram() {
+  let sessions = [];
+  let lastExercises = [];
+  let lastVolumes = {};
+
+  for (let cycle = 1; cycle <= 3; cycle++) {
+    for (let i = 1; i <= 36; i++) {
+      const patternsList = Object.keys(patterns).sort(() => Math.random() - 0.5);
+      let currentVolTypes = {};
+
+      for (let pattern of patternsList) {
+        let choices = patterns[pattern].filter(ex => !lastExercises.includes(ex));
+        if (choices.length === 0) choices = patterns[pattern];
+        const exercise = randomChoice(choices);
+
+        let types = ["low", "medium", "high"];
+        if (hybridExercises.includes(exercise)) types = ["low"];
+        const volumeType = randomChoice(types);
+
+        const vol = calculateVolume(exercise, volumeType, cycle);
+
+        sessions.push({
+          session: i,
+          cycle,
+          pattern,
+          exercise,
+          volumeType,
+          volume: vol,
+          formattedVolume: getVolumeFormat(exercise, vol, cycle),
+          order: patternsList.indexOf(pattern) + 1
+        });
+
+        currentVolTypes[pattern] = volumeType;
+      }
+      lastExercises = sessions.slice(-7).map(s => s.exercise);
+      lastVolumes = currentVolTypes;
+    }
+
+    const testSession = [
+      { exercise: "One-arm Swing", formattedVolume: "10 reps per hand" },
+      { exercise: "Get Up", formattedVolume: "1 rep per hand" },
+      { exercise: "Double Clean", formattedVolume: "5 reps" },
+      { exercise: "Military Press", formattedVolume: "5 reps per hand" },
+      { exercise: "Double Front Squat", formattedVolume: "5 reps" },
+      { exercise: "Snatch", formattedVolume: "5 reps per hand" }
+    ].map((ex, idx) => ({
+      session: 37,
+      cycle,
+      pattern: "Test Session",
+      ...ex,
+      volumeType: "test",
+      volume: null,
+      order: idx + 1
+    }));
+    sessions.push(...testSession);
+  }
+
+  return sessions;
+}
+
+// ------------------ REACT APP ---------------------
+
+function App() {
+  const [program, setProgram] = React.useState(() =>
+    JSON.parse(localStorage.getItem("b6e_program")) || null
+  );
+  const [index, setIndex] = React.useState(() =>
+    JSON.parse(localStorage.getItem("b6e_index")) || 0
+  );
+
+  const startProgram = () => {
+    const prog = generateProgram();
+    setProgram(prog);
+    setIndex(0);
+    localStorage.setItem("b6e_program", JSON.stringify(prog));
+    localStorage.setItem("b6e_index", 0);
+  };
+
+  const markComplete = () => {
+    const next = index + 7;
+    setIndex(next);
+    localStorage.setItem("b6e_index", next);
+  };
+
+  const goBack = () => {
+    const prev = index - 7;
+    setIndex(prev);
+    localStorage.setItem("b6e_index", prev);
+  };
+
+  const resetProgram = () => {
+    localStorage.removeItem("b6e_program");
+    localStorage.removeItem("b6e_index");
+    setProgram(null);
+    setIndex(0);
+  };
+
+  if (!program) {
+    return (
+      <div className="text-center space-y-6">
+        <h1 className="text-3xl font-bold">B6E Program</h1>
+        <button onClick={startProgram} className="w-full py-4 bg-green-600 rounded-xl text-xl font-semibold hover:bg-green-700">
+          Start Programma
+        </button>
+      </div>
+    );
+  }
+
+  const currentSession = program.slice(index, index + 7);
+  const isTest = currentSession[0]?.pattern === "Test Session";
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-center">
+        {isTest ? "Testdag" : `Sessie ${currentSession[0].session}`} – Cyclus {currentSession[0].cycle}
+      </h2>
+
+      <div className={`p-4 rounded-xl shadow-md ${isTest ? "test-session" : "regular-session"}`}>
+        {currentSession.map((ex, i) => (
+          <div key={i} className="mb-3">
+            <div className="font-bold text-lg">{ex.pattern}</div>
+            <div className="text-base">{ex.exercise} – {ex.formattedVolume}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="fixed bottom-4 left-4 right-4 flex space-x-3">
+        {index > 0 && (
+          <button onClick={goBack} className="flex-1 py-4 bg-gray-600 rounded-xl text-lg font-semibold hover:bg-gray-700">
+            Vorige
+          </button>
+        )}
+        <button onClick={markComplete} className="flex-1 py-4 bg-blue-600 rounded-xl text-lg font-semibold hover:bg-blue-700">
+          Voltooid
+        </button>
+        <button onClick={resetProgram} className="flex-1 py-4 bg-red-600 rounded-xl text-lg font-semibold hover:bg-red-700">
+          Reset
+        </button>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
+  </script>
+</body>
+</html>
