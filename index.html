@@ -20,24 +20,178 @@
   <div id="root" class="w-full max-w-md"></div>
 
   <script type="text/babel">
-    /* ---- (Zelfde generatorlogica en volume-functies als eerder) ---- */
-    // ... [Hier blijft exact dezelfde B6E generator code zoals in versie 2] ...
-    // (Ik laat dat hier weg omdat dat stuk ongewijzigd blijft en al door jou is goedgekeurd.)
+    /* ------------------------------
+       Big Six Evolution generator
+    ------------------------------ */
 
-    /* ---- Recovery protocollen exact zoals jij aanleverde ---- */
-    const OS_RESET = `
-20 cross crawl
+    const patterns = {
+      "Swing Pattern": ["One-Legged Deadlift", "Double Sumo Deadlift", "Single Leg Glute Bridge",
+        "One-arm Swing", "(Side Stepping) Two-arm Swing", "Double Swing"],
+      "Get Up Pattern": ["(3 Min) Get Up", "Supine to Sit Up", "Windmill",
+        "Bent Press", "Supine to Half Kneel", "Half Kneel to Stand"],
+      "Clean Pattern": ["HS-Plank", "Front Rack Carry", "Single Dead Clean",
+        "Double Clean", "Pull Up/Chin Up", "One-arm Row"],
+      "Squat Pattern": ["B-stance Goblet Squat", "Single Front Squat", "Paused Front Squat",
+        "Double Front Squat", "Athletic Lunge", "Bottom Up Squat"],
+      "Press Pattern": ["Military Press", "Top Down Press", "Half Kneeling Press",
+        "Floor Press", "Double Push Press", "Double Push Jerk"],
+      "Snatch Pattern": ["Overhead Carry", "Snatch", "Low Pull Snatch",
+        "High Pull", "Front/Side Raise Snatch", "Double Snatch"],
+      "Hybrid Pattern": ["Double Clean & Press", "Double Clean & Front Squat", "Double Snatch & Overhead Walk",
+        "Double Clean & Jerk", "Double Snatch & Press", "Double Front Squat & Push Press"]
+    };
+
+    const cycleVolumes = {
+      1: { low: 10, medium: 20, high: 30 },
+      2: { low: 15, medium: 25, high: 40 },
+      3: { low: 20, medium: 30, high: 50 }
+    };
+
+    const swingLadderExercises = ["One-arm Swing", "(Side Stepping) Two-arm Swing", "Snatch", "High Pull"];
+    const evenLadderExercises = ["Double Push Press", "Double Push Jerk", "Double Clean", "Double Swing", "Double Snatch", "Double Front Squat"];
+    const timeBasedExercises = ["Overhead Carry", "Front Rack Carry", "HS-Plank"];
+    const hybridExercises = ["Double Clean & Press", "Double Clean & Front Squat", "Double Snatch & Overhead Walk",
+      "Double Clean & Jerk", "Double Snatch & Press", "Double Front Squat & Push Press"];
+
+    const randomChoice = arr => arr[Math.floor(Math.random() * arr.length)];
+
+    function calculateVolume(exercise, volumeType, cycle) {
+      const base = cycleVolumes[cycle][volumeType];
+
+      if (exercise === "(3 Min) Get Up") {
+        if (volumeType === "low") return cycle;
+        if (volumeType === "medium") return cycle + 1;
+        if (volumeType === "high") return cycle + 2;
+      }
+
+      if (hybridExercises.includes(exercise)) return cycleVolumes[cycle]["low"];
+
+      if (timeBasedExercises.includes(exercise)) {
+        const timeMap = {
+          1: { low: 30, medium: 60, high: 90 },
+          2: { low: 45, medium: 75, high: 105 },
+          3: { low: 60, medium: 90, high: 120 }
+        };
+        return timeMap[cycle][volumeType];
+      }
+
+      return base;
+    }
+
+    function getLadderPattern(exercise, volume, cycle) {
+      if (timeBasedExercises.includes(exercise)) return [`${volume} sec`, volume];
+
+      if (hybridExercises.includes(exercise)) {
+        if (cycle === 1) return ["1-2-3-4", 10];
+        if (cycle === 2) return ["1-2-3-4-5", 15];
+        if (cycle === 3) return ["2x 1-2-3-4", 20];
+      }
+
+      if (swingLadderExercises.includes(exercise)) {
+        const map = {
+          1: {10:"10",20:"5-15",30:"5-10-15"},
+          2: {15:"5-10",25:"10-15",40:"5-15-20"},
+          3: {20:"5-15",30:"10-20",50:"10-15-25"}
+        };
+        return [map[cycle][volume] || `${volume}`, volume];
+      }
+
+      if (evenLadderExercises.includes(exercise)) {
+        const map = {
+          1: {10:"4-6",20:"2-4-6-8",30:"2-4-6-8-10"},
+          2: {15:"2-4-6 + 1-2",25:"2x 2-4-6 + 1",40:"2-4-6-8-10 + 2-4-6"},
+          3: {20:"2-4-6-8",30:"2-4-6-8-10",50:"2x 2-4-6-8 + 2-4"}
+        };
+        return [map[cycle][volume] || `${volume}`, volume];
+      }
+
+      const map = {
+        1: {10:"1-2-3-4",20:"2x 1-2-3-4",30:"3x 1-2-3-4"},
+        2: {15:"1-2-3-4-5",25:"1-2-3-4-5 + 1-2-3-4",40:"2x 1-2-3-4-5 + 1-2-3-4"},
+        3: {20:"2x 1-2-3-4",30:"2x 1-2-3-4-5",50:"3x 1-2-3-4-5 + 1-2"}
+      };
+      return [map[cycle][volume] || `${volume} reps`, volume];
+    }
+
+    function getVolumeFormat(exercise, volume, cycle) {
+      const [pattern, total] = getLadderPattern(exercise, volume, cycle);
+      if (timeBasedExercises.includes(exercise)) return pattern;
+      return `${total} reps (${pattern})`;
+    }
+
+    function generateProgram() {
+      let sessions = [];
+      let lastExercises = [];
+      let lastVolumes = {};
+
+      for (let cycle = 1; cycle <= 3; cycle++) {
+        for (let i = 1; i <= 36; i++) {
+          const patternsList = Object.keys(patterns).sort(() => Math.random() - 0.5);
+          let currentVolTypes = {};
+
+          for (let pattern of patternsList) {
+            let choices = patterns[pattern].filter(ex => !lastExercises.includes(ex));
+            if (choices.length === 0) choices = patterns[pattern];
+            const exercise = randomChoice(choices);
+
+            let types = ["low", "medium", "high"];
+            if (hybridExercises.includes(exercise)) types = ["low"];
+            const volumeType = randomChoice(types);
+
+            const vol = calculateVolume(exercise, volumeType, cycle);
+
+            sessions.push({
+              session: i,
+              cycle,
+              pattern,
+              exercise,
+              volumeType,
+              volume: vol,
+              formattedVolume: getVolumeFormat(exercise, vol, cycle),
+              order: patternsList.indexOf(pattern) + 1
+            });
+
+            currentVolTypes[pattern] = volumeType;
+          }
+          lastExercises = sessions.slice(-7).map(s => s.exercise);
+          lastVolumes = currentVolTypes;
+        }
+
+        const testSession = [
+          { exercise: "One-arm Swing", formattedVolume: "10 reps per hand" },
+          { exercise: "Get Up", formattedVolume: "1 rep per hand" },
+          { exercise: "Double Clean", formattedVolume: "5 reps" },
+          { exercise: "Military Press", formattedVolume: "5 reps per hand" },
+          { exercise: "Double Front Squat", formattedVolume: "5 reps" },
+          { exercise: "Snatch", formattedVolume: "5 reps per hand" }
+        ].map((ex, idx) => ({
+          session: 37,
+          cycle,
+          pattern: "Test Session",
+          ...ex,
+          volumeType: "test",
+          volume: null,
+          order: idx + 1
+        }));
+        sessions.push(...testSession);
+      }
+
+      return sessions;
+    }
+
+    /* ------------------------------
+       Recovery protocollen
+    ------------------------------ */
+    const OS_RESET = `20 cross crawl
 2 minutes breathe with Diaphragm
 20 neck nods, on 5th and 15th keep your chin tucked and breathe diaphragmatacilly 5 times, on 10th and 20th keep chin up and breathe diaphragmatacilly 5 times
 Segmental rolls, 3 per limb
 20 Rocking, 10 in plantair 10 in dorsiflexion
 2 minutes Baby crawl
 
-Watch the tongue with all the exercises
-`;
+Watch the tongue with all the exercises`;
 
-    const GFM_MOBILITY = `
-Ground Force Method General Mobility
+    const GFM_MOBILITY = `Ground Force Method General Mobility
 
 Hips
 Figure 4 position, figure 4 lunge, half heel sit,
@@ -66,11 +220,9 @@ Forwards and backwards rolling
 Wrists
 Finger waves
 Hand circles
-Tea pot
-`;
+Tea pot`;
 
-    const KB_MOBILITY = `
-Kettlebell Mobility
+    const KB_MOBILITY = `Kettlebell Mobility
 
 Arm Bar
 2/3 Bent Arm Bar
@@ -89,20 +241,19 @@ Tactical Frog
 5 Tall kneeling Halo
 3 Tall Kneeling Rotations
 
-Nummers zijn de reps
-`;
+Nummers zijn de reps`;
 
-    const FULL_REST_ADVICE = `
-Volledige rustdag advies:
+    const FULL_REST_ADVICE = `Volledige rustdag advies:
 
 - Slaap: probeer 8 uur te halen
 - Hydratatie: minimaal 2 liter water
 - Voeding: focus op eiwit en micronutriënten
 - Optioneel: korte wandeling of ademhalingsoefeningen
-- Vermijd zware inspanning en focus op herstel
-`;
+- Vermijd zware inspanning en focus op herstel`;
 
-    /* ---- React App ---- */
+    /* ------------------------------
+       React component
+    ------------------------------ */
     function App() {
       const [program, setProgram] = React.useState(() =>
         JSON.parse(localStorage.getItem("b6e_program")) || null
@@ -116,7 +267,6 @@ Volledige rustdag advies:
       const [mode, setMode] = React.useState("check");
       const [recoveryFlow, setRecoveryFlow] = React.useState("");
 
-      /* Start programma */
       const startProgram = () => {
         const prog = generateProgram();
         setProgram(prog);
@@ -125,7 +275,6 @@ Volledige rustdag advies:
         localStorage.setItem("b6e_index", 0);
       };
 
-      /* Normale sessie voltooien */
       const markComplete = () => {
         const currentSession = program.slice(index, index + 7);
         const now = new Date();
@@ -143,33 +292,25 @@ Volledige rustdag advies:
         setMode("check");
       };
 
-      /* Recovery log */
       const logRecovery = (type) => {
         const now = new Date();
-        const entry = {
-          date: now.toLocaleString(),
-          type: `Recovery: ${type}`
-        };
+        const entry = { date: now.toLocaleString(), type: `Recovery: ${type}` };
         const updatedHistory = [...history, entry];
         setHistory(updatedHistory);
         localStorage.setItem("b6e_history", JSON.stringify(updatedHistory));
         setMode("check");
       };
 
-      /* Full Rest log */
       const logRestDay = () => {
         const now = new Date();
-        const entry = {
-          date: now.toLocaleString(),
-          type: "Full Rest Day"
-        };
+        const entry = { date: now.toLocaleString(), type: "Full Rest Day" };
         const updatedHistory = [...history, entry];
         setHistory(updatedHistory);
         localStorage.setItem("b6e_history", JSON.stringify(updatedHistory));
         setMode("check");
       };
 
-      /* UI logica */
+      /* Screens */
       if (!program) {
         return (
           <div className="text-center space-y-6">
@@ -181,7 +322,6 @@ Volledige rustdag advies:
         );
       }
 
-      /* Herstel-check scherm */
       if (mode === "check") {
         return (
           <div className="space-y-6 text-center">
@@ -207,7 +347,6 @@ Volledige rustdag advies:
         );
       }
 
-      /* Normale training scherm */
       if (mode === "training") {
         const currentSession = program.slice(index, index + 7);
         const isTest = currentSession[0]?.pattern === "Test Session";
@@ -231,54 +370,9 @@ Volledige rustdag advies:
         );
       }
 
-      /* Recovery submenu */
       if (mode === "recoveryChoice") {
         return (
           <div className="space-y-6 text-center">
             <h2 className="text-2xl font-bold">Welke hersteltraining kies je?</h2>
             <button onClick={() => {setRecoveryFlow(OS_RESET); setMode("recovery");}} className="w-full py-3 bg-green-600 rounded-xl text-lg hover:bg-green-700">OS Reset</button>
-            <button onClick={() => {setRecoveryFlow(GFM_MOBILITY); setMode("recovery");}} className="w-full py-3 bg-blue-600 rounded-xl text-lg hover:bg-blue-700">GFM General Mobility</button>
-            <button onClick={() => {setRecoveryFlow(KB_MOBILITY); setMode("recovery");}} className="w-full py-3 bg-purple-600 rounded-xl text-lg hover:bg-purple-700">Kettlebell Mobility</button>
-            <button onClick={() => setMode("check")} className="w-full py-3 bg-gray-600 rounded-xl text-lg hover:bg-gray-700">Annuleer</button>
-          </div>
-        );
-      }
-
-      /* Recovery detail scherm */
-      if (mode === "recovery") {
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-center">Recovery Flow</h2>
-            <div className="scroll-box bg-gray-700 rounded-xl p-4 text-left text-sm">
-              {recoveryFlow}
-            </div>
-            <button onClick={() => logRecovery(recoveryFlow.startsWith("20 cross") ? "OS Reset" :
-                                               recoveryFlow.startsWith("Ground Force") ? "GFM General Mobility" :
-                                               "Kettlebell Mobility")}
-                    className="w-full py-4 bg-blue-600 rounded-xl text-lg font-semibold hover:bg-blue-700">
-              Klaar
-            </button>
-          </div>
-        );
-      }
-
-      /* Full rest scherm */
-      if (mode === "rest") {
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-center">Volledige Rustdag</h2>
-            <div className="scroll-box bg-gray-700 rounded-xl p-4 text-left text-sm">
-              {FULL_REST_ADVICE}
-            </div>
-            <button onClick={logRestDay} className="w-full py-4 bg-blue-600 rounded-xl text-lg font-semibold hover:bg-blue-700">
-              Terug naar start
-            </button>
-          </div>
-        );
-      }
-    }
-
-    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-  </script>
-</body>
-</html>
+            <button onClick={() => {setRecoveryFlow(GFM_MOBILITY); setMode("recovery
