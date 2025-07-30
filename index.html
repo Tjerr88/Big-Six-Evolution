@@ -226,7 +226,6 @@ Arm Bar
 - Focus on protein and micronutrients
 - Optional: light walk or breathing drills
 - Avoid strenuous exercise and prioritize recovery`;
-
     function App() {
       const [program, setProgram] = React.useState(() =>
         JSON.parse(localStorage.getItem("b6e_program")) || null
@@ -313,17 +312,16 @@ Arm Bar
         const currentSession = program.slice(index, index + 7);
         logSession(`Cycle ${cycle} – Phase ${phase} – Session ${currentSession[0].session}`);
         let next = index + 7;
-if (next >= 36 * 7) {
-  // Spring direct naar testmodus (sessie 37)
-  next = 36 * 7; 
-  setMode("test");
-}
-setIndex(next);
-localStorage.setItem("b6e_index", next);
+
+        if (next >= 36 * 7) {
+          next = 36 * 7;
+          setMode("test");
+        } else {
+          setMode("checkQuestions");
+        }
 
         setIndex(next);
         localStorage.setItem("b6e_index", next);
-        setMode("checkQuestions");
       };
 
       const previousSession = () => {
@@ -483,15 +481,14 @@ localStorage.setItem("b6e_index", next);
         );
       }
 
-if (mode === "training") {
-  const currentSession = program.slice(index, index + 7);
+      if (mode === "training") {
+        const currentSession = program.slice(index, index + 7);
 
-  // Check of dit een testsessie is
-  const isTest = currentSession.some(ex => ex.pattern === "Test Session");
-  if (isTest) {
-    setMode("test");
-    return null;
-  }
+        // Fix: Check of dit een testdag is
+        if (currentSession.some(ex => ex.pattern === "Test Session")) {
+          setMode("test");
+          return null;
+        }
 
         return (
           <div className="space-y-6">
