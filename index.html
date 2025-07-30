@@ -10,26 +10,22 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { background-color: #111827; color: #f9fafb; font-size: 1.1rem; }
-    .test-session { background-color: #374151; border: 3px solid #f59e0b; }
     .regular-session { background-color: #1f2937; border: 2px solid #4b5563; }
-    button { transition: background 0.2s; }
-    .scroll-box { max-height: 70vh; overflow-y: auto; white-space: pre-line; }
-    .score-3 { color: #22c55e; }   /* green */
-    .score-2 { color: #3b82f6; }   /* blue */
-    .score-1 { color: #f59e0b; }   /* orange */
-    .score-0 { color: #9ca3af; }   /* gray */
+    .test-session { background-color: #374151; border: 3px solid #f59e0b; }
+    .score-3 { color: #22c55e; }
+    .score-2 { color: #3b82f6; }
+    .score-1 { color: #f59e0b; }
+    .score-0 { color: #9ca3af; }
     .passed { color: #22c55e; font-weight: bold; }
     .failed { color: #ef4444; font-weight: bold; }
+    .selected { background-color: #3b82f6 !important; }
+    .scroll-box { max-height: 70vh; overflow-y: auto; white-space: pre-line; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-2">
   <div id="root" class="w-full max-w-md"></div>
 
   <script type="text/babel">
-    /* ---------------------------
-       Big Six Evolution Generator
-    --------------------------- */
-
     const patterns = {
       "Swing Pattern": ["One-Legged Deadlift", "Double Sumo Deadlift", "Single Leg Glute Bridge", "One-arm Swing", "(Side Stepping) Two-arm Swing", "Double Swing"],
       "Get Up Pattern": ["(3 Min) Get Up", "Supine to Sit Up", "Windmill", "Bent Press", "Supine to Half Kneel", "Half Kneel to Stand"],
@@ -55,15 +51,12 @@
 
     function calculateVolume(exercise, volumeType, cycle) {
       const base = cycleVolumes[cycle][volumeType];
-
       if (exercise === "(3 Min) Get Up") {
         if (volumeType === "low") return cycle;
         if (volumeType === "medium") return cycle + 1;
         if (volumeType === "high") return cycle + 2;
       }
-
       if (hybridExercises.includes(exercise)) return cycleVolumes[cycle]["low"];
-
       if (timeBasedExercises.includes(exercise)) {
         const timeMap = {
           1: { low: 30, medium: 60, high: 90 },
@@ -72,19 +65,16 @@
         };
         return timeMap[cycle][volumeType];
       }
-
       return base;
     }
 
     function getLadderPattern(exercise, volume, cycle) {
       if (timeBasedExercises.includes(exercise)) return [`${volume} sec`, volume];
-
       if (hybridExercises.includes(exercise)) {
         if (cycle === 1) return ["1-2-3-4", 10];
         if (cycle === 2) return ["1-2-3-4-5", 15];
         if (cycle === 3) return ["2x 1-2-3-4", 20];
       }
-
       if (swingLadderExercises.includes(exercise)) {
         const map = {
           1: {10:"10",20:"5-15",30:"5-10-15"},
@@ -93,7 +83,6 @@
         };
         return [map[cycle][volume] || `${volume}`, volume];
       }
-
       if (evenLadderExercises.includes(exercise)) {
         const map = {
           1: {10:"4-6",20:"2-4-6-8",30:"2-4-6-8-10"},
@@ -102,7 +91,6 @@
         };
         return [map[cycle][volume] || `${volume}`, volume];
       }
-
       const map = {
         1: {10:"1-2-3-4",20:"2x 1-2-3-4",30:"3x 1-2-3-4"},
         2: {15:"1-2-3-4-5",25:"1-2-3-4-5 + 1-2-3-4",40:"2x 1-2-3-4-5 + 1-2-3-4"},
@@ -117,72 +105,64 @@
       return `${total} reps (${pattern})`;
     }
 
-    function generateProgram() {
+    function generatePhase(cycle, phase) {
       let sessions = [];
       let lastExercises = [];
       let lastVolumes = {};
 
-      for (let cycle = 1; cycle <= 3; cycle++) {
-        for (let i = 1; i <= 36; i++) {
-          const patternsList = Object.keys(patterns).sort(() => Math.random() - 0.5);
-          let currentVolTypes = {};
-
-          for (let pattern of patternsList) {
-            let choices = patterns[pattern].filter(ex => !lastExercises.includes(ex));
-            if (choices.length === 0) choices = patterns[pattern];
-            const exercise = randomChoice(choices);
-
-            let types = ["low", "medium", "high"];
-            if (hybridExercises.includes(exercise)) types = ["low"];
-            const volumeType = randomChoice(types);
-
-            const vol = calculateVolume(exercise, volumeType, cycle);
-
-            sessions.push({
-              session: i,
-              cycle,
-              pattern,
-              exercise,
-              volumeType,
-              volume: vol,
-              formattedVolume: getVolumeFormat(exercise, vol, cycle),
-              order: patternsList.indexOf(pattern) + 1
-            });
-
-            currentVolTypes[pattern] = volumeType;
-          }
-          lastExercises = sessions.slice(-7).map(s => s.exercise);
-          lastVolumes = currentVolTypes;
+      for (let i = 1; i <= 36; i++) {
+        const patternsList = Object.keys(patterns).sort(() => Math.random() - 0.5);
+        let currentVolTypes = {};
+        for (let pattern of patternsList) {
+          let choices = patterns[pattern].filter(ex => !lastExercises.includes(ex));
+          if (choices.length === 0) choices = patterns[pattern];
+          const exercise = randomChoice(choices);
+          let types = ["low", "medium", "high"];
+          if (hybridExercises.includes(exercise)) types = ["low"];
+          const volumeType = randomChoice(types);
+          const vol = calculateVolume(exercise, volumeType, phase);
+          sessions.push({
+            session: i,
+            cycle,
+            phase,
+            pattern,
+            exercise,
+            volumeType,
+            volume: vol,
+            formattedVolume: getVolumeFormat(exercise, vol, phase),
+            order: patternsList.indexOf(pattern) + 1
+          });
+          currentVolTypes[pattern] = volumeType;
         }
-
-        const testSession = [
-          { exercise: "One-arm Swing", formattedVolume: "10 reps each arm" },
-          { exercise: "Get Up", formattedVolume: "1 rep each arm" },
-          { exercise: "Double Clean", formattedVolume: "5 reps" },
-          { exercise: "Military Press", formattedVolume: "5 reps each arm" },
-          { exercise: "Double Front Squat", formattedVolume: "5 reps" },
-          { exercise: "Snatch", formattedVolume: "5 reps each arm" }
-        ].map((ex, idx) => ({
-          session: 37,
-          cycle,
-          pattern: "Test Session",
-          ...ex,
-          volumeType: "test",
-          volume: null,
-          order: idx + 1
-        }));
-        sessions.push(...testSession);
+        lastExercises = sessions.slice(-7).map(s => s.exercise);
+        lastVolumes = currentVolTypes;
       }
+
+      const testSession = [
+        { exercise: "One-arm Swing", formattedVolume: "10 reps each arm" },
+        { exercise: "Get Up", formattedVolume: "1 rep each arm" },
+        { exercise: "Double Clean", formattedVolume: "5 reps" },
+        { exercise: "Military Press", formattedVolume: "5 reps each arm" },
+        { exercise: "Double Front Squat", formattedVolume: "5 reps" },
+        { exercise: "Snatch", formattedVolume: "5 reps each arm" }
+      ].map((ex, idx) => ({
+        session: 37,
+        cycle,
+        phase,
+        pattern: "Test Session",
+        ...ex,
+        volumeType: "test",
+        volume: null,
+        order: idx + 1
+      }));
+      sessions.push(...testSession);
 
       return sessions;
     }
 
-    /* ------------------------------
-       Recovery Flows (English text)
-    ------------------------------ */
     const OS_RESET = `20 cross crawl
 2 minutes diaphragmatic breathing
-20 neck nods (hold 5th/15th chin tucked, 10th/20th chin up with diaphragmatic breaths)
+20 neck nods (hold 5th/15th chin tucked, 10th/20th chin up)
 Segmental rolls, 3 per limb
 20 Rocking (10 plantar, 10 dorsiflexion)
 2 minutes Baby crawl
@@ -230,7 +210,7 @@ Arm Bar
 3/3 Bent Press
 5/10 Pump Stretch
 5/10 Tactical Frog
-5/10 Overhead Hip Flexor Stretch
+10 Overhead Hip Flexor Stretch
 5 Prying Goblet Squat
 3/5 Cossack Squat
 5/10 Goodmorning Hamstring Stretch
@@ -247,16 +227,15 @@ Arm Bar
 - Optional: light walk or breathing drills
 - Avoid strenuous exercise and prioritize recovery`;
 
-    /* ------------------------------
-       React App Component
-    ------------------------------ */
-    /* ------------------------------
-       React App – Logic & UI
-    ------------------------------ */
-
     function App() {
       const [program, setProgram] = React.useState(() =>
         JSON.parse(localStorage.getItem("b6e_program")) || null
+      );
+      const [cycle, setCycle] = React.useState(() =>
+        JSON.parse(localStorage.getItem("b6e_cycle")) || 1
+      );
+      const [phase, setPhase] = React.useState(() =>
+        JSON.parse(localStorage.getItem("b6e_phase")) || 1
       );
       const [index, setIndex] = React.useState(() =>
         JSON.parse(localStorage.getItem("b6e_index")) || 0
@@ -266,11 +245,10 @@ Arm Bar
       );
       const [mode, setMode] = React.useState("checkQuestions");
       const [answers, setAnswers] = React.useState({ sleep: null, soreness: null, energy: null });
+      const [selectedAnswers, setSelectedAnswers] = React.useState({});
       const [recoveryFlow, setRecoveryFlow] = React.useState("");
       const [timer, setTimer] = React.useState(0);
       const [running, setRunning] = React.useState(false);
-
-      // Test tracking
       const [testChecks, setTestChecks] = React.useState({});
       const [previousTest, setPreviousTest] = React.useState(() =>
         JSON.parse(localStorage.getItem("b6e_lastTest")) || null
@@ -278,22 +256,23 @@ Arm Bar
 
       React.useEffect(() => {
         let interval = null;
-        if (running) {
-          interval = setInterval(() => setTimer((t) => t + 1), 1000);
-        }
+        if (running) interval = setInterval(() => setTimer((t) => t + 1), 1000);
         return () => clearInterval(interval);
       }, [running]);
 
       const startProgram = () => {
-        const prog = generateProgram();
+        const prog = generatePhase(cycle, phase);
         setProgram(prog);
         setIndex(0);
         localStorage.setItem("b6e_program", JSON.stringify(prog));
+        localStorage.setItem("b6e_cycle", cycle);
+        localStorage.setItem("b6e_phase", phase);
         localStorage.setItem("b6e_index", 0);
       };
 
       const handleAnswer = (question, value) => {
         setAnswers({ ...answers, [question]: value });
+        setSelectedAnswers({ ...selectedAnswers, [question]: value });
       };
 
       const calculateScore = () => {
@@ -332,7 +311,7 @@ Arm Bar
 
       const markComplete = () => {
         const currentSession = program.slice(index, index + 7);
-        logSession(`B6E – Cycle ${currentSession[0].cycle}, Session ${currentSession[0].session}`);
+        logSession(`Cycle ${cycle} – Phase ${phase} – Session ${currentSession[0].session}`);
         const next = index + 7;
         setIndex(next);
         localStorage.setItem("b6e_index", next);
@@ -356,51 +335,56 @@ Arm Bar
         setMode("checkQuestions");
       };
 
-      /* -------- TEST LOGIC -------- */
-
       const toggleCheck = (exercise) => {
         setTestChecks(prev => ({ ...prev, [exercise]: !prev[exercise] }));
       };
 
-      const submitTestResult = (cycle, phase) => {
+      const submitTestResult = () => {
         const allPassed = Object.values(testChecks).every(Boolean);
         const passedCount = Object.values(testChecks).filter(Boolean).length;
-
-        // Save test detail
         const now = new Date();
         const detail = {
           date: now.toLocaleString(),
           cycle,
+          phase,
           results: testChecks,
           passedCount
         };
         setPreviousTest(detail);
         localStorage.setItem("b6e_lastTest", JSON.stringify(detail));
-
-        // Log in history
-        const summary = `Test Cycle ${cycle} – ${passedCount}/6 passed`;
+        const summary = `Test – Cycle ${cycle} Phase ${phase} – ${passedCount}/6 passed`;
         const updatedHistory = [...history, { date: now.toLocaleString(), type: summary }];
         setHistory(updatedHistory);
         localStorage.setItem("b6e_history", JSON.stringify(updatedHistory));
 
-        // Decide next step
         if (allPassed) {
           alert("Perfect! Start a new cycle with a heavier kettlebell.");
-          setIndex(0); // Reset to new cycle
+          setCycle(cycle + 1);
+          setPhase(1);
+          const prog = generatePhase(cycle + 1, 1);
+          setProgram(prog);
+          setIndex(0);
+          localStorage.setItem("b6e_cycle", cycle + 1);
+          localStorage.setItem("b6e_phase", 1);
+          localStorage.setItem("b6e_program", JSON.stringify(prog));
           localStorage.setItem("b6e_index", 0);
         } else {
           if (phase < 3) {
             alert("Continue with the next phase of the current cycle with the current kettlebell weight.");
-            setIndex(index + 7); // Continue to next phase
-            localStorage.setItem("b6e_index", index + 7);
+            setPhase(phase + 1);
+            const prog = generatePhase(cycle, phase + 1);
+            setProgram(prog);
+            setIndex(0);
+            localStorage.setItem("b6e_phase", phase + 1);
+            localStorage.setItem("b6e_program", JSON.stringify(prog));
+            localStorage.setItem("b6e_index", 0);
           } else {
             alert("Not passed – repeat Phase 3 with the current kettlebell weight and retest afterwards.");
-            // Generate new Phase 3 sessions only
-            const newProgram = generateProgram(); // (Simplified: full regen but index to last phase 3)
-            setProgram(newProgram);
-            setIndex((2 * 37)); // Jump to cycle 3 phase 3 start
-            localStorage.setItem("b6e_program", JSON.stringify(newProgram));
-            localStorage.setItem("b6e_index", (2 * 37));
+            const prog = generatePhase(cycle, 3);
+            setProgram(prog);
+            setIndex(0);
+            localStorage.setItem("b6e_program", JSON.stringify(prog));
+            localStorage.setItem("b6e_index", 0);
           }
         }
 
@@ -408,9 +392,15 @@ Arm Bar
         setMode("checkQuestions");
       };
 
-      /* --------- SCREENS --------- */
+      const clearHistory = () => {
+        if (confirm("Are you sure you want to clear the entire history?")) {
+          setHistory([]);
+          setPreviousTest(null);
+          localStorage.removeItem("b6e_history");
+          localStorage.removeItem("b6e_lastTest");
+        }
+      };
 
-      // Start screen
       if (!program) {
         return (
           <div className="text-center space-y-6">
@@ -422,7 +412,6 @@ Arm Bar
         );
       }
 
-      // Daily check screen
       if (mode === "checkQuestions") {
         const questions = [
           { key: "sleep", label: "How well did you sleep?" },
@@ -439,8 +428,18 @@ Arm Bar
               <div key={q.key} className="space-y-2">
                 <p className="font-semibold">{q.label}</p>
                 <div className="flex space-x-2 justify-center">
-                  <button onClick={() => handleAnswer(q.key, "good")} className="bg-green-600 px-4 py-2 rounded">Good</button>
-                  <button onClick={() => handleAnswer(q.key, "bad")} className="bg-gray-600 px-4 py-2 rounded">Poor</button>
+                  <button
+                    onClick={() => handleAnswer(q.key, "good")}
+                    className={`px-4 py-2 rounded ${selectedAnswers[q.key]==="good" ? "selected" : "bg-green-600"}`}
+                  >
+                    Good
+                  </button>
+                  <button
+                    onClick={() => handleAnswer(q.key, "bad")}
+                    className={`px-4 py-2 rounded ${selectedAnswers[q.key]==="bad" ? "selected" : "bg-gray-600"}`}
+                  >
+                    Poor
+                  </button>
                 </div>
               </div>
             ))}
@@ -466,17 +465,19 @@ Arm Bar
                   ))}
                 </ul>
               )}
+              {history.length > 0 && (
+                <button onClick={clearHistory} className="mt-2 w-full py-2 bg-red-600 rounded-xl hover:bg-red-700">
+                  Clear History
+                </button>
+              )}
             </div>
           </div>
         );
       }
 
-      // Training session (normal)
       if (mode === "training") {
         const currentSession = program.slice(index, index + 7);
         const isTest = currentSession[0]?.pattern === "Test Session";
-
-        // If test day → go to test mode
         if (isTest) {
           setMode("test");
           return null;
@@ -485,9 +486,8 @@ Arm Bar
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-center">
-              Session {currentSession[0].session} – Cycle {currentSession[0].cycle}
+              Cycle {cycle} – Phase {phase} – Session {currentSession[0].session}
             </h2>
-
             <div className={`p-4 rounded-xl shadow-md regular-session`}>
               {currentSession.map((ex, i) => (
                 <div key={i} className="mb-3">
@@ -496,7 +496,6 @@ Arm Bar
                 </div>
               ))}
             </div>
-
             <div className="flex justify-between space-x-2">
               <button onClick={() => setRunning(!running)} className="w-1/3 py-2 bg-purple-600 rounded-xl text-sm font-semibold hover:bg-purple-700">
                 {running ? "Stop Timer" : "Start Timer"}
@@ -506,7 +505,6 @@ Arm Bar
                 Previous
               </button>
             </div>
-
             <button onClick={markComplete} className="w-full py-4 bg-blue-600 rounded-xl text-lg font-semibold hover:bg-blue-700">
               Complete
             </button>
@@ -514,14 +512,14 @@ Arm Bar
         );
       }
 
-      // Test session (checklist)
       if (mode === "test") {
         const currentSession = program.slice(index, index + 6);
-        const phase = 3; // Simplified: treat 3rd block as phase 3 (could be dynamic)
 
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-center">Test Day – Cycle {currentSession[0].cycle}</h2>
+            <h2 className="text-2xl font-bold text-center">
+              Test Day – Cycle {cycle} Phase {phase}
+            </h2>
 
             {previousTest && (
               <div className="bg-gray-700 p-3 rounded text-sm">
@@ -558,14 +556,13 @@ Arm Bar
               </button>
             </div>
 
-            <button onClick={() => submitTestResult(currentSession[0].cycle, phase)} className="w-full py-4 bg-blue-600 rounded-xl text-lg font-semibold hover:bg-blue-700">
+            <button onClick={submitTestResult} className="w-full py-4 bg-blue-600 rounded-xl text-lg font-semibold hover:bg-blue-700">
               Submit Test Result
             </button>
           </div>
         );
       }
 
-      // Recovery choice
       if (mode === "recoveryChoice") {
         return (
           <div className="space-y-6 text-center">
@@ -577,7 +574,6 @@ Arm Bar
         );
       }
 
-      // Recovery session
       if (mode === "recovery") {
         return (
           <div className="space-y-6">
@@ -605,7 +601,6 @@ Arm Bar
         );
       }
 
-      // Rest day
       if (mode === "rest") {
         return (
           <div className="space-y-6">
