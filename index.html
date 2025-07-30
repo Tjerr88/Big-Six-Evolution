@@ -312,7 +312,15 @@ Arm Bar
       const markComplete = () => {
         const currentSession = program.slice(index, index + 7);
         logSession(`Cycle ${cycle} – Phase ${phase} – Session ${currentSession[0].session}`);
-        const next = index + 7;
+        let next = index + 7;
+if (next >= 36 * 7) {
+  // Spring direct naar testmodus (sessie 37)
+  next = 36 * 7; 
+  setMode("test");
+}
+setIndex(next);
+localStorage.setItem("b6e_index", next);
+
         setIndex(next);
         localStorage.setItem("b6e_index", next);
         setMode("checkQuestions");
@@ -475,13 +483,15 @@ Arm Bar
         );
       }
 
-      if (mode === "training") {
-        const currentSession = program.slice(index, index + 7);
-        const isTest = currentSession[0]?.pattern === "Test Session";
-        if (isTest) {
-          setMode("test");
-          return null;
-        }
+if (mode === "training") {
+  const currentSession = program.slice(index, index + 7);
+
+  // Check of dit een testsessie is
+  const isTest = currentSession.some(ex => ex.pattern === "Test Session");
+  if (isTest) {
+    setMode("test");
+    return null;
+  }
 
         return (
           <div className="space-y-6">
