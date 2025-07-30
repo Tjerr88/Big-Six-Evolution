@@ -26,141 +26,84 @@
   <div id="root" class="w-full max-w-md"></div>
 
   <script type="text/babel">
-    /* === DATA EN GENERATOR === */
+    // === DATA & GENERATOR ===
     const patterns = {
-      "Swing Pattern": ["One-Legged Deadlift", "Double Sumo Deadlift", "Single Leg Glute Bridge", "One-arm Swing", "(Side Stepping) Two-arm Swing", "Double Swing"],
-      "Get Up Pattern": ["(3 Min) Get Up", "Supine to Sit Up", "Windmill", "Bent Press", "Supine to Half Kneel", "Half Kneel to Stand"],
-      "Clean Pattern": ["HS-Plank", "Front Rack Carry", "Single Dead Clean", "Double Clean", "Pull Up/Chin Up", "One-arm Row"],
-      "Squat Pattern": ["B-stance Goblet Squat", "Single Front Squat", "Paused Front Squat", "Double Front Squat", "Athletic Lunge", "Bottom Up Squat"],
-      "Press Pattern": ["Military Press", "Top Down Press", "Half Kneeling Press", "Floor Press", "Double Push Press", "Double Push Jerk"],
-      "Snatch Pattern": ["Overhead Carry", "Snatch", "Low Pull Snatch", "High Pull", "Front/Side Raise Snatch", "Double Snatch"],
-      "Hybrid Pattern": ["Double Clean & Press", "Double Clean & Front Squat", "Double Snatch & Overhead Walk", "Double Clean & Jerk", "Double Snatch & Press", "Double Front Squat & Push Press"]
+      "Swing Pattern": ["One-Legged Deadlift","Double Sumo Deadlift","Single Leg Glute Bridge","One-arm Swing","(Side Stepping) Two-arm Swing","Double Swing"],
+      "Get Up Pattern": ["(3 Min) Get Up","Supine to Sit Up","Windmill","Bent Press","Supine to Half Kneel","Half Kneel to Stand"],
+      "Clean Pattern": ["HS-Plank","Front Rack Carry","Single Dead Clean","Double Clean","Pull Up/Chin Up","One-arm Row"],
+      "Squat Pattern": ["B-stance Goblet Squat","Single Front Squat","Paused Front Squat","Double Front Squat","Athletic Lunge","Bottom Up Squat"],
+      "Press Pattern": ["Military Press","Top Down Press","Half Kneeling Press","Floor Press","Double Push Press","Double Push Jerk"],
+      "Snatch Pattern": ["Overhead Carry","Snatch","Low Pull Snatch","High Pull","Front/Side Raise Snatch","Double Snatch"],
+      "Hybrid Pattern": ["Double Clean & Press","Double Clean & Front Squat","Double Snatch & Overhead Walk","Double Clean & Jerk","Double Snatch & Press","Double Front Squat & Push Press"]
     };
+    const cycleVolumes = {1:{low:10,medium:20,high:30},2:{low:15,medium:25,high:40},3:{low:20,medium:30,high:50}};
+    const swingLadderExercises=["One-arm Swing","(Side Stepping) Two-arm Swing","Snatch","High Pull"];
+    const evenLadderExercises=["Double Push Press","Double Push Jerk","Double Clean","Double Swing","Double Snatch","Double Front Squat"];
+    const timeBasedExercises=["Overhead Carry","Front Rack Carry","HS-Plank"];
+    const hybridExercises=["Double Clean & Press","Double Clean & Front Squat","Double Snatch & Overhead Walk","Double Clean & Jerk","Double Snatch & Press","Double Front Squat & Push Press"];
+    const randomChoice = arr=>arr[Math.floor(Math.random()*arr.length)];
 
-    const cycleVolumes = {
-      1: { low: 10, medium: 20, high: 30 },
-      2: { low: 15, medium: 25, high: 40 },
-      3: { low: 20, medium: 30, high: 50 }
-    };
-
-    const swingLadderExercises = ["One-arm Swing", "(Side Stepping) Two-arm Swing", "Snatch", "High Pull"];
-    const evenLadderExercises = ["Double Push Press", "Double Push Jerk", "Double Clean", "Double Swing", "Double Snatch", "Double Front Squat"];
-    const timeBasedExercises = ["Overhead Carry", "Front Rack Carry", "HS-Plank"];
-    const hybridExercises = ["Double Clean & Press", "Double Clean & Front Squat", "Double Snatch & Overhead Walk", "Double Clean & Jerk", "Double Snatch & Press", "Double Front Squat & Push Press"];
-
-    const randomChoice = arr => arr[Math.floor(Math.random() * arr.length)];
-
-    function calculateVolume(exercise, volumeType, cycle) {
-      const base = cycleVolumes[cycle][volumeType];
-      if (exercise === "(3 Min) Get Up") {
-        if (volumeType === "low") return cycle;
-        if (volumeType === "medium") return cycle + 1;
-        if (volumeType === "high") return cycle + 2;
-      }
-      if (hybridExercises.includes(exercise)) return cycleVolumes[cycle]["low"];
-      if (timeBasedExercises.includes(exercise)) {
-        const timeMap = {
-          1: { low: 30, medium: 60, high: 90 },
-          2: { low: 45, medium: 75, high: 105 },
-          3: { low: 60, medium: 90, high: 120 }
-        };
-        return timeMap[cycle][volumeType];
+    function calculateVolume(exercise, vType, cycle) {
+      const base = cycleVolumes[cycle][vType];
+      if(exercise==="(3 Min) Get Up") return cycle + (vType==="medium"?1:vType==="high"?2:0);
+      if(hybridExercises.includes(exercise)) return cycleVolumes[cycle].low;
+      if(timeBasedExercises.includes(exercise)) {
+        const map={1:{low:30,medium:60,high:90},2:{low:45,medium:75,high:105},3:{low:60,medium:90,high:120}};
+        return map[cycle][vType];
       }
       return base;
     }
-
-    function getLadderPattern(exercise, volume, cycle) {
-      if (timeBasedExercises.includes(exercise)) return [`${volume} sec`, volume];
-      if (hybridExercises.includes(exercise)) {
-        if (cycle === 1) return ["1-2-3-4", 10];
-        if (cycle === 2) return ["1-2-3-4-5", 15];
-        if (cycle === 3) return ["2x 1-2-3-4", 20];
+    function getLadderPattern(ex,vol,cycle) {
+      if(timeBasedExercises.includes(ex)) return [`${vol} sec`,vol];
+      if(hybridExercises.includes(ex)) {
+        if(cycle===1) return ["1-2-3-4",10];
+        if(cycle===2) return ["1-2-3-4-5",15];
+        return ["2x 1-2-3-4",20];
       }
-      if (swingLadderExercises.includes(exercise)) {
-        const map = {
-          1: {10:"10",20:"5-15",30:"5-10-15"},
-          2: {15:"5-10",25:"10-15",40:"5-15-20"},
-          3: {20:"5-15",30:"10-20",50:"10-15-25"}
-        };
-        return [map[cycle][volume] || `${volume}`, volume];
-      }
-      if (evenLadderExercises.includes(exercise)) {
-        const map = {
-          1: {10:"4-6",20:"2-4-6-8",30:"2-4-6-8-10"},
-          2: {15:"2-4-6 + 1-2",25:"2x 2-4-6 + 1",40:"2-4-6-8-10 + 2-4-6"},
-          3: {20:"2-4-6-8",30:"2-4-6-8-10",50:"2x 2-4-6-8 + 2-4"}
-        };
-        return [map[cycle][volume] || `${volume}`, volume];
-      }
-      const map = {
-        1: {10:"1-2-3-4",20:"2x 1-2-3-4",30:"3x 1-2-3-4"},
-        2: {15:"1-2-3-4-5",25:"1-2-3-4-5 + 1-2-3-4",40:"2x 1-2-3-4-5 + 1-2-3-4"},
-        3: {20:"2x 1-2-3-4",30:"2x 1-2-3-4-5",50:"3x 1-2-3-4-5 + 1-2"}
-      };
-      return [map[cycle][volume] || `${volume} reps`, volume];
+      const swingMap={1:{10:"10",20:"5-15",30:"5-10-15"},2:{15:"5-10",25:"10-15",40:"5-15-20"},3:{20:"5-15",30:"10-20",50:"10-15-25"}};
+      if(swingLadderExercises.includes(ex)) return [swingMap[cycle][vol]||(`${vol}`),vol];
+      const evenMap={1:{10:"4-6",20:"2-4-6-8",30:"2-4-6-8-10"},2:{15:"2-4-6+1-2",25:"2x2-4-6+1",40:"2-4-6-8-10+2-4-6"},3:{20:"2-4-6-8",30:"2-4-6-8-10",50:"2x2-4-6-8+2-4"}};
+      if(evenLadderExercises.includes(ex)) return [evenMap[cycle][vol]||(`${vol}`),vol];
+      const baseMap={1:{10:"1-2-3-4",20:"2x1-2-3-4",30:"3x1-2-3-4"},2:{15:"1-2-3-4-5",25:"1-2-3-4-5+1-2-3-4",40:"2x1-2-3-4-5+1-2-3-4"},3:{20:"2x1-2-3-4",30:"2x1-2-3-4-5",50:"3x1-2-3-4-5+1-2"}};
+      return [baseMap[cycle][vol]||(`${vol} reps`),vol];
     }
-
-    function getVolumeFormat(exercise, volume, cycle) {
-      const [pattern, total] = getLadderPattern(exercise, volume, cycle);
-      if (timeBasedExercises.includes(exercise)) return pattern;
-      return `${total} reps (${pattern})`;
+    function getVolumeFormat(ex,vol,cycle){
+      const [pat,total]=getLadderPattern(ex,vol,cycle);
+      return timeBasedExercises.includes(ex)?pat:`${total} reps (${pat})`;
     }
-
-    function generatePhase(cycle, phase) {
-      let sessions = [];
-      let lastExercises = [];
-      let lastVolumes = {};
-
-      for (let i = 1; i <= 36; i++) {
-        const patternsList = Object.keys(patterns).sort(() => Math.random() - 0.5);
-        let currentVolTypes = {};
-        for (let pattern of patternsList) {
-          let choices = patterns[pattern].filter(ex => !lastExercises.includes(ex));
-          if (choices.length === 0) choices = patterns[pattern];
-          const exercise = randomChoice(choices);
-          let types = ["low", "medium", "high"];
-          if (hybridExercises.includes(exercise)) types = ["low"];
-          const volumeType = randomChoice(types);
-          const vol = calculateVolume(exercise, volumeType, phase);
-          sessions.push({
-            session: i,
-            cycle,
-            phase,
-            pattern,
-            exercise,
-            volumeType,
-            volume: vol,
-            formattedVolume: getVolumeFormat(exercise, vol, phase),
-            order: patternsList.indexOf(pattern) + 1
-          });
-          currentVolTypes[pattern] = volumeType;
+    function generatePhase(cycle,phase){
+      let sessions=[],lastEx=[],lastVols={};
+      for(let i=1;i<=36;i++){
+        const order=Object.keys(patterns).sort(()=>Math.random()-.5);
+        let volTypes={};
+        for(let pat of order){
+          let choices=patterns[pat].filter(e=>!lastEx.includes(e));
+          if(!choices.length) choices=patterns[pat];
+          const ex=randomChoice(choices);
+          let types=["low","medium","high"];
+          if(hybridExercises.includes(ex)) types=["low"];
+          const vt=randomChoice(types),v=calculateVolume(ex,vt,phase);
+          sessions.push({session:i,cycle,phase,pattern:pat,exercise:ex,volumeType:vt,volume:v,formattedVolume:getVolumeFormat(ex,v,phase),order:order.indexOf(pat)+1});
+          volTypes[pat]=vt;
         }
-        lastExercises = sessions.slice(-7).map(s => s.exercise);
-        lastVolumes = currentVolTypes;
+        lastEx=sessions.slice(-order.length).map(s=>s.exercise);
+        lastVols=volTypes;
       }
-
-      const testSession = [
-        { exercise: "One-arm Swing", formattedVolume: "10 reps each arm" },
-        { exercise: "Get Up", formattedVolume: "1 rep each arm" },
-        { exercise: "Double Clean", formattedVolume: "5 reps" },
-        { exercise: "Military Press", formattedVolume: "5 reps each arm" },
-        { exercise: "Double Front Squat", formattedVolume: "5 reps" },
-        { exercise: "Snatch", formattedVolume: "5 reps each arm" }
-      ].map((ex, idx) => ({
-        session: 37,
-        cycle,
-        phase,
-        pattern: "Test Session",
-        ...ex,
-        volumeType: "test",
-        volume: null,
-        order: idx + 1
-      }));
-      sessions.push(...testSession);
-
+      // testdag
+      const testMoves=[
+        {exercise:"One-arm Swing",formattedVolume:"10 reps each arm"},
+        {exercise:"Get Up",formattedVolume:"1 rep each arm"},
+        {exercise:"Double Clean",formattedVolume:"5 reps"},
+        {exercise:"Military Press",formattedVolume:"5 reps each arm"},
+        {exercise:"Double Front Squat",formattedVolume:"5 reps"},
+        {exercise:"Snatch",formattedVolume:"5 reps each arm"}
+      ];
+      testMoves.forEach((m,i)=>sessions.push({session:37,cycle,phase,pattern:"Test Session",...m,volumeType:"test",volume:null,order:i+1}));
       return sessions;
     }
-    const OS_RESET = `20 cross crawl
+
+    // === RECOVERY TEXTS ===
+    const OS_RESET=`20 cross crawl
 2 minutes diaphragmatic breathing
 20 neck nods (hold 5th/15th chin tucked, 10th/20th chin up)
 Segmental rolls, 3 per limb
@@ -168,8 +111,7 @@ Segmental rolls, 3 per limb
 2 minutes Baby crawl
 
 Keep tongue on the roof of your mouth during all resets`;
-
-    const GFM_MOBILITY = `Ground Force Method General Mobility
+    const GFM_MOBILITY=`Ground Force Method General Mobility
 
 Hips
 Figure 4 position, figure 4 lunge, half heel sit,
@@ -199,8 +141,7 @@ Wrists
 Finger waves
 Hand circles
 Tea pot`;
-
-    const KB_MOBILITY = `Kettlebell Mobility
+    const KB_MOBILITY=`Kettlebell Mobility
 
 Arm Bar
 2/3 Bent Arm Bar
@@ -218,8 +159,7 @@ Arm Bar
 3/5 Get Up High Bridge
 5 Tall kneeling Halo
 3 Tall Kneeling Rotations`;
-
-    const FULL_REST_ADVICE = `Full rest day advice:
+    const FULL_REST_ADVICE=`Full rest day advice:
 
 - Aim for 8 hours of sleep
 - Stay hydrated (2 liters water minimum)
@@ -227,212 +167,137 @@ Arm Bar
 - Optional: light walk or breathing drills
 - Avoid strenuous exercise and prioritize recovery`;
 
-    /* === REACT APP === */
-    function App() {
-      const [program, setProgram] = React.useState(() =>
-        JSON.parse(localStorage.getItem("b6e_program")) || null
-      );
-      const [cycle, setCycle] = React.useState(() =>
-        JSON.parse(localStorage.getItem("b6e_cycle")) || 1
-      );
-      const [phase, setPhase] = React.useState(() =>
-        JSON.parse(localStorage.getItem("b6e_phase")) || 1
-      );
-      const [index, setIndex] = React.useState(() =>
-        JSON.parse(localStorage.getItem("b6e_index")) || 0
-      );
-      const [history, setHistory] = React.useState(() =>
-        JSON.parse(localStorage.getItem("b6e_history")) || []
-      );
-      const [mode, setMode] = React.useState("checkQuestions");
-      const [answers, setAnswers] = React.useState({ sleep: null, soreness: null, energy: null });
-      const [selectedAnswers, setSelectedAnswers] = React.useState({});
-      const [recoveryFlow, setRecoveryFlow] = React.useState("");
-      const [timer, setTimer] = React.useState(0);
-      const [running, setRunning] = React.useState(false);
-      const [testChecks, setTestChecks] = React.useState({});
-      const [previousTest, setPreviousTest] = React.useState(() =>
-        JSON.parse(localStorage.getItem("b6e_lastTest")) || null
-      );
+    // === REACT APP ===
+    function App(){
+      const [program,setProgram]=React.useState(()=>
+        JSON.parse(localStorage.getItem("b6e_program"))||null);
+      const [cycle,setCycle]=React.useState(()=>
+        JSON.parse(localStorage.getItem("b6e_cycle"))||1);
+      const [phase,setPhase]=React.useState(()=>
+        JSON.parse(localStorage.getItem("b6e_phase"))||1);
+      const [index,setIndex]=React.useState(()=>
+        JSON.parse(localStorage.getItem("b6e_index"))||0);
+      const [history,setHistory]=React.useState(()=>
+        JSON.parse(localStorage.getItem("b6e_history"))||[]);
+      const [mode,setMode]=React.useState("checkQuestions");
+      const [answers,setAnswers]=React.useState({sleep:null,soreness:null,energy:null});
+      const [selectedAnswers,setSelectedAnswers]=React.useState({});
+      const [recoveryFlow,setRecoveryFlow]=React.useState("");
+      const [timer,setTimer]=React.useState(0);
+      const [running,setRunning]=React.useState(false);
+      const [testChecks,setTestChecks]=React.useState({});
+      const [previousTest,setPreviousTest]=React.useState(()=>
+        JSON.parse(localStorage.getItem("b6e_lastTest"))||null);
 
-      React.useEffect(() => {
-        let interval = null;
-        if (running) interval = setInterval(() => setTimer((t) => t + 1), 1000);
-        return () => clearInterval(interval);
-      }, [running]);
+      // auto-advance when all answered
+      React.useEffect(()=>{
+        const allAnswered=Object.values(answers).every(a=>a!==null);
+        if(allAnswered && mode==="checkQuestions") finalizeCheck();
+      },[answers]);
 
-      const startProgram = () => {
-        // Reset alles
-        localStorage.removeItem("b6e_program");
-        localStorage.removeItem("b6e_cycle");
-        localStorage.removeItem("b6e_phase");
-        localStorage.removeItem("b6e_index");
-        localStorage.removeItem("b6e_history");
-        localStorage.removeItem("b6e_lastTest");
+      React.useEffect(()=>{
+        let iv;
+        if(running) iv=setInterval(()=>setTimer(t=>t+1),1000);
+        return ()=>clearInterval(iv);
+      },[running]);
 
-        const prog = generatePhase(1, 1);
-        setCycle(1);
-        setPhase(1);
-        setProgram(prog);
-        setIndex(0);
-        localStorage.setItem("b6e_program", JSON.stringify(prog));
-        localStorage.setItem("b6e_cycle", 1);
-        localStorage.setItem("b6e_phase", 1);
-        localStorage.setItem("b6e_index", 0);
+      const startProgram=()=>{
+        ["b6e_program","b6e_cycle","b6e_phase","b6e_index","b6e_history","b6e_lastTest"].forEach(k=>localStorage.removeItem(k));
+        const prog=generatePhase(1,1);
+        setCycle(1); setPhase(1); setProgram(prog); setIndex(0);
+        localStorage.setItem("b6e_program",JSON.stringify(prog));
+        localStorage.setItem("b6e_cycle",1);
+        localStorage.setItem("b6e_phase",1);
+        localStorage.setItem("b6e_index",0);
       };
 
-      // Reset Program knop – wist alles en herstart
-      const resetProgram = () => {
-        if (confirm("Reset entire program and start over?")) {
-          localStorage.removeItem("b6e_program");
-          localStorage.removeItem("b6e_cycle");
-          localStorage.removeItem("b6e_phase");
-          localStorage.removeItem("b6e_index");
-          localStorage.removeItem("b6e_history");
-          localStorage.removeItem("b6e_lastTest");
+      const resetProgram=()=>{
+        if(confirm("Reset entire program and start over?")){
+          ["b6e_program","b6e_cycle","b6e_phase","b6e_index","b6e_history","b6e_lastTest"].forEach(k=>localStorage.removeItem(k));
           location.reload();
         }
       };
 
-      const handleAnswer = (question, value) => {
-        setAnswers({ ...answers, [question]: value });
-        setSelectedAnswers({ ...selectedAnswers, [question]: value });
+      const handleAnswer=(q,v)=>{ setAnswers(a=>({...a,[q]:v})); setSelectedAnswers(s=>({...s,[q]:v})); };
+      const calculateScore=()=>["good"].reduce((s,k)=>s+(answers[k]?1:0),0)+0; // replaced by below
+      const calcScore=()=>{
+        let s=0; if(answers.sleep==="good")s++; if(answers.soreness==="good")s++; if(answers.energy==="good")s++; return s;
       };
-
-      const calculateScore = () => {
-        let score = 0;
-        if (answers.sleep === "good") score++;
-        if (answers.soreness === "good") score++;
-        if (answers.energy === "good") score++;
-        return score;
-      };
-
-      const finalizeCheck = () => {
-        const score = calculateScore();
-        if (score === 3 || score === 2) setMode("training");
-        else if (score === 1) setMode("recoveryChoice");
+      const finalizeCheck=()=>{
+        const sc=calcScore();
+        if(sc>=2) setMode("training");
+        else if(sc===1) setMode("recoveryChoice");
         else setMode("rest");
       };
-
-      const formatTime = (seconds) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, "0")}`;
+      const formatTime=sec=>`${Math.floor(sec/60)}:${String(sec%60).padStart(2,"0")}`;
+      const logSession=type=>{
+        const now=new Date(),sc=calcScore();
+        const entry={date:now.toLocaleString(),type:`${type} (${sc}/3) – ${formatTime(timer)}`};
+        const h=[...history,entry]; setHistory(h); localStorage.setItem("b6e_history",JSON.stringify(h)); setTimer(0);
       };
 
-      const logSession = (entryType) => {
-        const now = new Date();
-        const score = calculateScore();
-        const entry = {
-          date: now.toLocaleString(),
-          type: `${entryType} (${score}/3) – ${formatTime(timer)}`
-        };
-        const updatedHistory = [...history, entry];
-        setHistory(updatedHistory);
-        localStorage.setItem("b6e_history", JSON.stringify(updatedHistory));
-        setTimer(0);
+      const markComplete=()=>{
+        const cs=program.slice(index,index+7);
+        logSession(`Cycle ${cycle} – Phase ${phase} – Session ${cs[0].session}`);
+        let nxt=index+7;
+        if(nxt>=36*7){ nxt=36*7; setMode("test"); }
+        else setMode("checkQuestions");
+        setIndex(nxt); localStorage.setItem("b6e_index",nxt);
       };
-
-      const markComplete = () => {
-        const currentSession = program.slice(index, index + 7);
-        logSession(`Cycle ${cycle} – Phase ${phase} – Session ${currentSession[0].session}`);
-        let next = index + 7;
-
-        if (next >= 36 * 7) {
-          next = 36 * 7;
-          setMode("test");
-        } else {
-          setMode("checkQuestions");
-        }
-
-        setIndex(next);
-        localStorage.setItem("b6e_index", next);
+      const previousSession=()=>{
+        if(index>=7){const p=index-7; setIndex(p); localStorage.setItem("b6e_index",p);}
       };
+      const logRecovery=t=>{ logSession(`Recovery: ${t}`); setMode("checkQuestions"); };
+      const logRestDay=()=>{ logSession("Full Rest Day"); setMode("checkQuestions"); };
+      const toggleCheck=ex=>setTestChecks(t=>({...t,[ex]:!t[ex]}));
 
-      const previousSession = () => {
-        if (index >= 7) {
-          setIndex(index - 7);
-          localStorage.setItem("b6e_index", index - 7);
-        }
-      };
-
-      const logRecovery = (type) => {
-        logSession(`Recovery: ${type}`);
-        setMode("checkQuestions");
-      };
-
-      const logRestDay = () => {
-        logSession("Full Rest Day");
-        setMode("checkQuestions");
-      };
-
-      const toggleCheck = (exercise) => {
-        setTestChecks(prev => ({ ...prev, [exercise]: !prev[exercise] }));
-      };
-
-      const submitTestResult = () => {
-        const passedCount = Object.values(testChecks).filter(Boolean).length;
-        const allPassed = passedCount === 6;
-        const now = new Date();
-        const detail = {
-          date: now.toLocaleString(),
-          cycle,
-          phase,
-          results: testChecks,
-          passedCount
-        };
+      const submitTestResult=()=>{
+        const passedCount=Object.values(testChecks).filter(Boolean).length;
+        const allPassed=(passedCount===6);
+        const now=new Date();
+        const detail={date:now.toLocaleString(),cycle,phase,results:testChecks,passedCount};
         setPreviousTest(detail);
-        localStorage.setItem("b6e_lastTest", JSON.stringify(detail));
-        const summary = `Test – Cycle ${cycle} Phase ${phase} – ${passedCount}/6 passed`;
-        const updatedHistory = [...history, { date: now.toLocaleString(), type: summary }];
-        setHistory(updatedHistory);
-        localStorage.setItem("b6e_history", JSON.stringify(updatedHistory));
+        localStorage.setItem("b6e_lastTest",JSON.stringify(detail));
+        const summary=`Test – Cycle ${cycle} Phase ${phase} – ${passedCount}/6 passed`;
+        const h=[...history,{date:now.toLocaleString(),type:summary}];
+        setHistory(h); localStorage.setItem("b6e_history",JSON.stringify(h));
 
-        if (allPassed) {
+        if(allPassed){
           alert("Perfect! Start a new cycle with a heavier kettlebell.");
-          setCycle(cycle + 1);
-          setPhase(1);
-          const prog = generatePhase(cycle + 1, 1);
-          setProgram(prog);
-          setIndex(0);
-          localStorage.setItem("b6e_cycle", cycle + 1);
-          localStorage.setItem("b6e_phase", 1);
-          localStorage.setItem("b6e_program", JSON.stringify(prog));
-          localStorage.setItem("b6e_index", 0);
+          const newCycle=cycle+1; setCycle(newCycle); setPhase(1);
+          const prog=generatePhase(newCycle,1);
+          setProgram(prog); setIndex(0);
+          localStorage.setItem("b6e_cycle",newCycle);
+          localStorage.setItem("b6e_phase",1);
+          localStorage.setItem("b6e_program",JSON.stringify(prog));
+          localStorage.setItem("b6e_index",0);
+        } else if(phase<3){
+          alert("Continue with the next phase of the current cycle with the current kettlebell weight.");
+          const newPhase=phase+1; setPhase(newPhase);
+          const prog=generatePhase(cycle,newPhase);
+          setProgram(prog); setIndex(0);
+          localStorage.setItem("b6e_phase",newPhase);
+          localStorage.setItem("b6e_program",JSON.stringify(prog));
+          localStorage.setItem("b6e_index",0);
         } else {
-          if (phase < 3) {
-            alert("Continue with the next phase of the current cycle with the current kettlebell weight.");
-            setPhase(phase + 1);
-            const prog = generatePhase(cycle, phase + 1);
-            setProgram(prog);
-            setIndex(0);
-            localStorage.setItem("b6e_phase", phase + 1);
-            localStorage.setItem("b6e_program", JSON.stringify(prog));
-            localStorage.setItem("b6e_index", 0);
-          } else {
-            alert("Not passed – repeat Phase 3 with the current kettlebell weight and retest afterwards.");
-            const prog = generatePhase(cycle, 3);
-            setProgram(prog);
-            setIndex(0);
-            localStorage.setItem("b6e_program", JSON.stringify(prog));
-            localStorage.setItem("b6e_index", 0);
-          }
+          alert("Not passed – repeat Phase 3 with the current kettlebell weight and retest afterwards.");
+          const prog=generatePhase(cycle,3);
+          setProgram(prog); setIndex(0);
+          localStorage.setItem("b6e_program",JSON.stringify(prog));
+          localStorage.setItem("b6e_index",0);
         }
-
-        setTestChecks({});
-        setMode("checkQuestions");
+        setTestChecks({}); setMode("checkQuestions");
       };
 
-      const clearHistory = () => {
-        if (confirm("Are you sure you want to clear the entire history?")) {
-          setHistory([]);
-          setPreviousTest(null);
-          localStorage.removeItem("b6e_history");
-          localStorage.removeItem("b6e_lastTest");
+      const clearHistory=()=>{
+        if(confirm("Are you sure you want to clear the entire history?")){
+          setHistory([]); setPreviousTest(null);
+          localStorage.removeItem("b6e_history"); localStorage.removeItem("b6e_lastTest");
         }
       };
 
-      if (!program) {
+      // --- RENDER ---
+      if(!program){
         return (
           <div className="text-center space-y-6">
             <h1 className="text-3xl font-bold">Big Six Evolution</h1>
@@ -443,78 +308,138 @@ Arm Bar
         );
       }
 
-      if (mode === "checkQuestions") {
-        const questions = [
-          { key: "sleep", label: "How well did you sleep?" },
-          { key: "soreness", label: "How sore are you?" },
-          { key: "energy", label: "How is your energy today?" }
-        ];
-
-        const allAnswered = Object.values(answers).every(a => a !== null);
-
+      if(mode==="checkQuestions"){
+        const questions=[{key:"sleep",label:"How well did you sleep?"},{key:"soreness",label:"How sore are you?"},{key:"energy",label:"How is your energy today?"}];
+        const allAnswered=Object.values(answers).every(a=>a!==null);
         return (
           <div className="space-y-6 text-center">
             <h2 className="text-2xl font-bold">Daily Check</h2>
-            {questions.map(q => (
+            {questions.map(q=>(
               <div key={q.key} className="space-y-2">
                 <p className="font-semibold">{q.label}</p>
                 <div className="flex space-x-2 justify-center">
-                  <button
-                    onClick={() => handleAnswer(q.key, "good")}
-                    className={`px-4 py-2 rounded ${selectedAnswers[q.key]==="good" ? "selected" : "bg-green-600"}`}
-                  >
-                    Good
-                  </button>
-                  <button
-                    onClick={() => handleAnswer(q.key, "bad")}
-                    className={`px-4 py-2 rounded ${selectedAnswers[q.key]==="bad" ? "selected" : "bg-gray-600"}`}
-                  >
-                    Poor
-                  </button>
+                  <button onClick={()=>handleAnswer(q.key,"good")} className={`px-4 py-2 rounded ${selectedAnswers[q.key]==="good"?"selected":"bg-green-600"}`}>Good</button>
+                  <button onClick={()=>handleAnswer(q.key,"bad")} className={`px-4 py-2 rounded ${selectedAnswers[q.key]==="bad"?"selected":"bg-gray-600"}`}>Poor</button>
                 </div>
               </div>
             ))}
-
-            {allAnswered && (
-              <button onClick={finalizeCheck} className="w-full py-3 bg-blue-600 rounded-xl text-lg hover:bg-blue-700">
-                Continue
-              </button>
-            )}
-
+            {allAnswered&&<button onClick={finalizeCheck} className="w-full py-3 bg-blue-600 rounded-xl text-lg hover:bg-blue-700">Continue</button>}
             <div className="pt-6">
               <h3 className="text-xl font-bold mb-2">History</h3>
-              {history.length === 0 ? (
-                <p className="text-gray-400">No sessions yet</p>
-              ) : (
+              {history.length===0?
+                <p className="text-gray-400">No sessions yet</p>:
                 <ul className="space-y-1 max-h-48 overflow-y-auto">
-                  {history.slice().reverse().map((h, i) => (
+                  {history.slice().reverse().map((h,i)=>(
                     <li key={i} className={`bg-gray-700 rounded p-2 text-sm ${
-                      h.type.includes("(3/3)") ? "score-3" :
-                      h.type.includes("(2/3)") ? "score-2" :
-                      h.type.includes("(1/3)") ? "score-1" : "score-0"
+                      h.type.includes("(3/3)")?"score-3":
+                      h.type.includes("(2/3)")?"score-2":
+                      h.type.includes("(1/3)")?"score-1":"score-0"
                     }`}>{h.date} – {h.type}</li>
                   ))}
                 </ul>
-              )}
-              {history.length > 0 && (
-                <>
-                  <button onClick={clearHistory} className="mt-2 w-full py-2 bg-red-600 rounded-xl hover:bg-red-700">
-                    Clear History
-                  </button>
-                  <button onClick={resetProgram} className="mt-2 w-full py-2 bg-yellow-600 rounded-xl hover:bg-yellow-700">
-                    Reset Program
-                  </button>
-                </>
-              )}
+              }
+              {history.length>0 && <>
+                <button onClick={clearHistory} className="mt-2 w-full py-2 bg-red-600 rounded-xl hover:bg-red-700">Clear History</button>
+                <button onClick={resetProgram} className="mt-2 w-full py-2 bg-yellow-600 rounded-xl hover:bg-yellow-700">Reset Program</button>
+              </>}
             </div>
           </div>
         );
       }
 
-      // (rest van de modes: training, test, recoveryChoice, recovery, rest)
-      // blijft hetzelfde als in de vorige versie die ik je gaf – geen veranderingen nodig.
+      if(mode==="training"){
+        const currentSession=program.slice(index,index+7);
+        if(currentSession.some(ex=>ex.pattern==="Test Session")){
+          setMode("test");
+          return null;
+        }
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-center">Cycle {cycle} – Phase {phase} – Session {currentSession[0].session}</h2>
+            <div className="p-4 rounded-xl shadow-md regular-session">
+              {currentSession.map((ex,i)=>(
+                <div key={i} className="mb-3">
+                  <div className="font-bold text-lg">{ex.pattern}</div>
+                  <div className="text-base">{ex.exercise} – {ex.formattedVolume}</div>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-between space-x-2">
+              <button onClick={()=>setRunning(!running)} className="w-1/3 py-2 bg-purple-600 rounded-xl text-sm font-semibold hover:bg-purple-700">{running?"Stop Timer":"Start Timer"}</button>
+              <div className="w-1/3 text-center font-bold text-lg">{formatTime(timer)}</div>
+              <button onClick={previousSession} className="w-1/3 py-2 bg-gray-600 rounded-xl text-sm hover:bg-gray-700">Previous</button>
+            </div>
+            <button onClick={markComplete} className="w-full py-4 bg-blue-600 rounded-xl text-lg font-semibold hover:bg-blue-700">Complete</button>
+          </div>
+        );
+      }
 
-      // ... (laatste render) ...
+      if(mode==="test"){
+        const currentSession=program.slice(index,index+6);
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-center">Test Day – Cycle {cycle} Phase {phase}</h2>
+            {previousTest&&<div className="bg-gray-700 p-3 rounded text-sm">
+              <h3 className="font-bold mb-2">Previous Test Results:</h3>
+              {Object.entries(previousTest.results).map(([e,p])=><p key={e} className={p?"passed":"failed"}>{e}: {p?"Passed":"Failed"}</p>)}
+              <p className="mt-2">Passed {previousTest.passedCount}/6 exercises</p>
+            </div>}
+            <div className="p-4 rounded-xl shadow-md test-session">
+              {currentSession.map((ex,i)=>(
+                <div key={i} className="flex justify-between mb-2">
+                  <span>{ex.exercise} – {ex.formattedVolume}</span>
+                  <input type="checkbox" checked={testChecks[ex.exercise]||false} onChange={()=>toggleCheck(ex.exercise)} />
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-between space-x-2">
+              <button onClick={()=>setRunning(!running)} className="w-1/3 py-2 bg-purple-600 rounded-xl text-sm font-semibold hover:bg-purple-700">{running?"Stop Timer":"Start Timer"}</button>
+              <div className="w-1/3 text-center font-bold text-lg">{formatTime(timer)}</div>
+              <button onClick={previousSession} className="w-1/3 py-2 bg-gray-600 rounded-xl text-sm hover:bg-gray-700">Previous</button>
+            </div>
+            <button onClick={submitTestResult} className="w-full py-4 bg-blue-600 rounded-xl text-lg font-semibold hover:bg-blue-700">Submit Test Result</button>
+          </div>
+        );
+      }
+
+      if(mode==="recoveryChoice"){
+        return (
+          <div className="space-y-6 text-center">
+            <h2 className="text-2xl font-bold">Choose Recovery Session</h2>
+            <button onClick={()=>{setRecoveryFlow(OS_RESET);setMode("recovery")}} className="w-full py-3 bg-green-600 rounded-xl text-lg hover:bg-green-700">OS Reset</button>
+            <button onClick={()=>{setRecoveryFlow(GFM_MOBILITY);setMode("recovery")}} className="w-full py-3 bg-blue-600 rounded-xl text-lg hover:bg-blue-700">GFM Mobility</button>
+            <button onClick={()=>{setRecoveryFlow(KB_MOBILITY);setMode("recovery")}} className="w-full py-3 bg-purple-600 rounded-xl text-lg hover:bg-purple-700">Kettlebell Mobility</button>
+          </div>
+        );
+      }
+
+      if(mode==="recovery"){
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-center">Recovery Flow</h2>
+            <div className="scroll-box bg-gray-700 rounded-xl p-4 text-left text-sm">{recoveryFlow}</div>
+            <div className="flex justify-between space-x-2">
+              <button onClick={()=>setRunning(!running)} className="w-1/3 py-2 bg-purple-600 rounded-xl text-sm font-semibold hover:bg-purple-700">{running?"Stop Timer":"Start Timer"}</button>
+              <div className="w-1/3 text-center font-bold text-lg">{formatTime(timer)}</div>
+              <button onClick={previousSession} className="w-1/3 py-2 bg-gray-600 rounded-xl text-sm hover:bg-gray-700">Previous</button>
+            </div>
+            <button onClick={()=>logRecovery(
+              recoveryFlow.startsWith("20 cross")?"OS Reset":
+              recoveryFlow.startsWith("Ground Force")?"GFM Mobility":"Kettlebell Mobility"
+            )} className="w-full py-4 bg-blue-600 rounded-xl text-lg font-semibold hover:bg-blue-700">Done</button>
+          </div>
+        );
+      }
+
+      if(mode==="rest"){
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-center">Full Rest Day</h2>
+            <div className="scroll-box bg-gray-700 rounded-xl p-4 text-left text-sm">{FULL_REST_ADVICE}</div>
+            <button onClick={logRestDay} className="w-full py-4 bg-blue-600 rounded-xl text-lg font-semibold hover:bg-blue-700">Back to Start</button>
+          </div>
+        );
+      }
     }
 
     ReactDOM.createRoot(document.getElementById("root")).render(<App />);
