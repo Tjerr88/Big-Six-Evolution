@@ -26,6 +26,7 @@
   <div id="root" class="w-full max-w-md"></div>
 
   <script type="text/babel">
+    /* === DATA EN GENERATOR === */
     const patterns = {
       "Swing Pattern": ["One-Legged Deadlift", "Double Sumo Deadlift", "Single Leg Glute Bridge", "One-arm Swing", "(Side Stepping) Two-arm Swing", "Double Swing"],
       "Get Up Pattern": ["(3 Min) Get Up", "Supine to Sit Up", "Windmill", "Bent Press", "Supine to Half Kneel", "Half Kneel to Stand"],
@@ -208,8 +209,8 @@ Arm Bar
 3/5 Bretzel
 3/5 Windmill
 3/3 Bent Press
-5/10 Pump Stretch
-5/10 Tactical Frog
+Pump Stretch
+Tactical Frog
 10 Overhead Hip Flexor Stretch
 5 Prying Goblet Squat
 3/5 Cossack Squat
@@ -226,6 +227,8 @@ Arm Bar
 - Focus on protein and micronutrients
 - Optional: light walk or breathing drills
 - Avoid strenuous exercise and prioritize recovery`;
+
+    /* === REACT APP === */
     function App() {
       const [program, setProgram] = React.useState(() =>
         JSON.parse(localStorage.getItem("b6e_program")) || null
@@ -260,12 +263,22 @@ Arm Bar
       }, [running]);
 
       const startProgram = () => {
-        const prog = generatePhase(cycle, phase);
+        // Volledige reset bij start
+        localStorage.removeItem("b6e_program");
+        localStorage.removeItem("b6e_cycle");
+        localStorage.removeItem("b6e_phase");
+        localStorage.removeItem("b6e_index");
+        localStorage.removeItem("b6e_history");
+        localStorage.removeItem("b6e_lastTest");
+
+        const prog = generatePhase(1, 1);
+        setCycle(1);
+        setPhase(1);
         setProgram(prog);
         setIndex(0);
         localStorage.setItem("b6e_program", JSON.stringify(prog));
-        localStorage.setItem("b6e_cycle", cycle);
-        localStorage.setItem("b6e_phase", phase);
+        localStorage.setItem("b6e_cycle", 1);
+        localStorage.setItem("b6e_phase", 1);
         localStorage.setItem("b6e_index", 0);
       };
 
@@ -484,7 +497,6 @@ Arm Bar
       if (mode === "training") {
         const currentSession = program.slice(index, index + 7);
 
-        // Fix: Check of dit een testdag is
         if (currentSession.some(ex => ex.pattern === "Test Session")) {
           setMode("test");
           return null;
